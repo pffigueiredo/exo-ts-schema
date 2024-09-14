@@ -1,17 +1,6 @@
 # Exograph TypeScript Schema Builder
 
-This package provides unofficial TypeScript utilities for creating Exograph schemas with enhanced type safety and developer experience.
-
-## Key Features
-
-- Type-safe schema definition
-- Improved IDE autocompletion
-- Seamless integration with TypeScript projects
-
-I apologize for the confusion. You're right, and I understand you want the markdown with proper code block annotations for easy copying into VSCode. Here's the full version with appropriate markdown annotations:
-markdownCopy# Exograph TypeScript Schema Builder
-
-This package provides unofficial TypeScript utilities for creating Exograph schemas with enhanced type safety and developer experience.
+This package provides unofficial TypeScript utilities for generating Exograph schemas with enhanced type safety and developer experience.
 
 ## Key Features
 
