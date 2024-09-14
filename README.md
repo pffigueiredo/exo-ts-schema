@@ -1,8 +1,25 @@
-# Exograph TS Primitives
+# Exograph TypeScript Schema Builder
 
-This package provides a set of unofficial TypeScript utilities for creating an Exograph schema.
+This package provides unofficial TypeScript utilities for creating Exograph schemas with enhanced type safety and developer experience.
 
-### Primitives
+## Key Features
+
+- Type-safe schema definition
+- Improved IDE autocompletion
+- Seamless integration with TypeScript projects
+
+I apologize for the confusion. You're right, and I understand you want the markdown with proper code block annotations for easy copying into VSCode. Here's the full version with appropriate markdown annotations:
+markdownCopy# Exograph TypeScript Schema Builder
+
+This package provides unofficial TypeScript utilities for creating Exograph schemas with enhanced type safety and developer experience.
+
+## Key Features
+
+- Type-safe schema definition
+- Improved IDE autocompletion
+- Seamless integration with TypeScript projects
+
+## Primitives
 
 - Uuid
 - LocalDateTime
@@ -10,18 +27,21 @@ This package provides a set of unofficial TypeScript utilities for creating an E
 - Int
 - String
 - Boolean
-- Array<Type>
-- Decorate<Type, Options>
-- Set<Type>
-- ExoIsEqual<Type>
+- Array<T>
+- Set<T>
 
-### Composites
+## Utility Types
 
-- ExoContext
-- ExoType
-- ExoPostgres
+- Decorate<T, Options>: Add metadata to fields
+- ExoIsEqual<T>: Type-safe equality checks for access control
 
-### Example of Usage
+## Composites
+
+- ExoContext<T>: Define context objects
+- ExoType<T, Options>: Define database types with access control
+- ExoPostgres<T>: Define the overall schema
+
+## Example Usage
 
 ```typescript
 import type {
@@ -39,73 +59,30 @@ import type {
   Uuid,
 } from 'exo-types';
 
+// Define a user context with custom access properties
 type AuthUserContext = ExoContext<{
-  authUserId: Decorate<
-    Uuid,
-    {
-      query: 'getAuthUserId';
-    }
-  >;
+  authUserId: Decorate<Uuid, { query: 'getAuthUserId' }>;
 }>;
 
+// Define a broader authentication context
 type AuthContext = ExoContext<{
-  clerkId: Decorate<
-    String,
-    {
-      jwt: 'sub';
-    }
-  >;
-  role: Decorate<
-    String,
-    {
-      jwt: true;
-    }
-  >;
-  email: Decorate<
-    String,
-    {
-      jwt: true;
-    }
-  >;
-  firstName: Decorate<
-    String,
-    {
-      jwt: true;
-    }
-  >;
-  lastName: Decorate<
-    String,
-    {
-      jwt: true;
-    }
-  >;
+  clerkId: Decorate<String, { jwt: 'sub' }>;
+  role: Decorate<String, { jwt: true }>;
+  email: Decorate<String, { jwt: true }>;
+  firstName: Decorate<String, { jwt: true }>;
+  lastName: Decorate<String, { jwt: true }>;
 }>;
 
+// Define the 'Concert' type with fields and access control
 type Concert = ExoType<
   {
-    id: Decorate<
-      Uuid,
-      {
-        pk: true;
-        defaultValue: Uuid;
-      }
-    >;
-    title: Decorate<
-      String,
-      {
-        index: true;
-      }
-    >;
+    id: Decorate<Uuid, { pk: true; defaultValue: Uuid }>;
+    title: Decorate<String, { index: true }>;
     description: String;
     memberPrice: Int;
     nonMemberPrice: Int;
     venue: Venue;
-    ticketLink: Decorate<
-      String,
-      {
-        optional: true;
-      }
-    >;
+    ticketLink: Decorate<String, { optional: true }>;
     photoUrl: String;
     startTime: LocalDateTime;
     endTime: LocalDateTime;
@@ -124,452 +101,33 @@ type Concert = ExoType<
   }
 >;
 
-type Venue = ExoType<
-  {
-    id: Decorate<
-      Uuid,
-      {
-        pk: true;
-        defaultValue: Uuid;
-      }
-    >;
-    name: Decorate<
-      String,
-      {
-        index: true;
-      }
-    >;
-    street: String;
-    city: String;
-    state: String;
-    zip: String;
-    concerts: Set<Concert>;
-    publish: Boolean;
-  },
-  {
-    access: {
-      query:
-        | ExoIsEqual<Venue['publish'], true>
-        | ExoIsEqual<AuthContext['role'], 'admin'>;
-      mutation: ExoIsEqual<AuthContext['role'], 'admin'>;
-    };
-  }
->;
-
-type Membership = ExoType<
-  {
-    id: Decorate<
-      Uuid,
-      {
-        pk: true;
-        defaultValue: Uuid;
-      }
-    >;
-    authUser: Decorate<
-      AuthUser,
-      {
-        index: true;
-      }
-    >;
-    spouseFirstName: Decorate<
-      String,
-      {
-        index: true;
-      }
-    >;
-    spouseLastName: Decorate<
-      String,
-      {
-        index: true;
-      }
-    >;
-    spouseEmail: Decorate<
-      String,
-      {
-        optional: true;
-      }
-    >;
-    expiry: Decorate<
-      LocalDate,
-      {
-        index: true;
-        access: {
-          query: true;
-          mutation: ExoIsEqual<AuthContext['role'], 'admin'>;
-        };
-      }
-    >;
-    type: Decorate<
-      String,
-      {
-        index: true;
-        access: {
-          query: true;
-          mutation: ExoIsEqual<AuthContext['role'], 'admin'>;
-        };
-      }
-    >;
-    payments: Set<Payment>;
-  },
-  {
-    access: {
-      query: ExoIsEqual<AuthContext['role'], 'admin'>;
-      mutation: ExoIsEqual<AuthContext['role'], 'admin'>;
-      delete: ExoIsEqual<AuthContext['role'], 'admin'>;
-    };
-  }
->;
-
-type Rsvp = ExoType<
-  {
-    id: Decorate<
-      Uuid,
-      {
-        pk: true;
-        defaultValue: Uuid;
-      }
-    >;
-    email: Decorate<
-      String,
-      {
-        unique: 'concert_email';
-      }
-    >;
-    concert: Decorate<
-      Concert,
-      {
-        unique: 'concert_email';
-      }
-    >;
-    numTickets: Int;
-  },
-  {
-    access: {
-      query: ExoIsEqual<AuthContext['role'], 'admin'>;
-      mutation: ExoIsEqual<AuthContext['role'], 'admin'>;
-      delete: ExoIsEqual<AuthContext['role'], 'admin'>;
-    };
-  }
->;
-
-type Notification = ExoType<
-  {
-    id: Decorate<
-      Uuid,
-      {
-        pk: true;
-        defaultValue: Uuid;
-      }
-    >;
-    concert: Decorate<
-      Concert,
-      {
-        optional: true;
-      }
-    >;
-    subject: Decorate<
-      String,
-      {
-        index: true;
-      }
-    >;
-    message: String;
-    postMessage: String;
-  },
-  {
-    access: {
-      query: ExoIsEqual<AuthContext['role'], 'admin'>;
-    };
-  }
->;
-
-type Advisory = ExoType<
-  {
-    id: Decorate<
-      Uuid,
-      {
-        pk: true;
-        defaultValue: Uuid;
-      }
-    >;
-    level: Decorate<String>;
-    message: Decorate<String>;
-    footer: Decorate<String, { optional: true }>;
-  },
-  {
-    access: {
-      query: true;
-      mutation: ExoIsEqual<AuthContext['role'], 'admin'>;
-    };
-    plural: 'advisories';
-  }
->;
-
-type AuthUser = ExoType<
-  {
-    id: Decorate<
-      Uuid,
-      {
-        pk: true;
-        defaultValue: Uuid;
-      }
-    >;
-    clerkId: Decorate<
-      String,
-      {
-        unique: true;
-      }
-    >;
-    email: Decorate<
-      String,
-      {
-        unique: true;
-      }
-    >;
-    firstName: Decorate<
-      String,
-      {
-        index: true;
-      }
-    >;
-    lastName: Decorate<
-      String,
-      {
-        index: true;
-      }
-    >;
-    membership: Membership;
-  },
-  {
-    access: {
-      query:
-        | ExoIsEqual<AuthUser['clerkId'], AuthContext['clerkId']>
-        | ExoIsEqual<AuthContext['role'], 'admin'>;
-      mutation: ExoIsEqual<AuthContext['role'], 'admin'>;
-    };
-  }
->;
-
-type Payment = ExoType<
-  {
-    id: Decorate<
-      Uuid,
-      {
-        pk: true;
-        defaultValue: Uuid;
-      }
-    >;
-    membership: Membership;
-    date: LocalDate;
-    note: String;
-    infoOnly: Boolean;
-  },
-  {
-    access: {
-      query: ExoIsEqual<AuthContext['role'], 'admin'>;
-      create: ExoIsEqual<AuthContext['role'], 'admin'>;
-      delete: false;
-      update: false;
-    };
-  }
->;
-
-type Artist = ExoType<
-  {
-    id: Decorate<
-      Uuid,
-      {
-        pk: true;
-        defaultValue: Uuid;
-      }
-    >;
-    title: Decorate<String, { optional: true }>;
-    name: Decorate<String, { index: true }>;
-    bio: Decorate<String, { optional: true }>;
-    photoUrl: Decorate<String, { optional: true }>;
-    youtubeVideoIds: Decorate<Array<String>, { optional: true }>;
-    instruments: Decorate<Array<String>>;
-    publish: Decorate<Boolean, { index: true }>;
-    artistConcerts: Set<ConcertArtist>;
-  },
-  {
-    access: {
-      query:
-        | ExoIsEqual<Artist['publish'], true>
-        | ExoIsEqual<AuthContext['role'], 'admin'>;
-      mutation: ExoIsEqual<AuthContext['role'], 'admin'>;
-    };
-  }
->;
-
-type ConcertArtist = ExoType<
-  {
-    id: Decorate<
-      Uuid,
-      {
-        pk: true;
-        defaultValue: Uuid;
-      }
-    >;
-    concert: Concert;
-    artist: Artist;
-    isMain: Decorate<Boolean>;
-    rank: Int;
-    instrument: String;
-  },
-  {
-    access: {
-      query: true;
-      mutation: ExoIsEqual<AuthContext['role'], 'admin'>;
-    };
-  }
->;
-
-export declare const exoSchema: ExoPostgres<
-  [Concert, Venue, Membership, Rsvp, Notification, Advisory, AuthUser]
->;
+// Additional types, including 'Venue', 'Membership', and more...
 ```
 
-Results in the following schema 👇:
+This code results in an Exograph schema with complex access controls and relationships between various types.
 
-```exograph
-context AuthContext {
-  @jwt("sub") clerkId: String?
-  @jwt role: String
-  @jwt email: String
-  @jwt firstName: String
-  @jwt lastName: String
-}
+## Generated Schema
 
-context AuthUserContext {
-  @query("getAuthUserId") authUserId: Uuid
-}
+The usage example above produces an Exograph schema with detailed access controls, relationships, and attributes. For instance, the Concert type includes fields for concert details, pricing, and access rules based on the user’s role or the concert’s publish status.
 
-@postgres
-module Concertmodule {
-  @access(query=self.publish || AuthContext.role == "admin", mutation=AuthContext.role == "admin")
-  type Concert {
-    @pk id: Uuid = generate_uuid()
-    @index title: String
-    description: String
-    memberPrice: Int
-    nonMemberPrice: Int
-    venue: Venue
-    ticketLink: String?
-    photoUrl: String
-    @index startTime: LocalDateTime
-    @index endTime: LocalDateTime
-    @index publish: Boolean
-    rsvps: Set<Rsvp>?
-    notifications: Set<Notification>?
-    concertArtists: Set<ConcertArtist>
-  }
+Example generated schema snippet:
 
-  @access(query=self.publish || AuthContext.role == "admin", mutation=AuthContext.role == "admin")
-  type Venue {
-    @pk id: Uuid = generate_uuid()
-    @index name: String
-    street: String
-    city: String
-    state: String
-    zip: String
-    concerts: Set<Concert>?
-    @index publish: Boolean
-  }
-
-  @access(query=self.publish || AuthContext.role == "admin", mutation=AuthContext.role == "admin")
-  type Artist {
-    @pk id: Uuid = generate_uuid()
-    title: String?
-    @index name: String
-    bio: String?
-    photoUrl: String?
-    youtubeVideoIds: Array<String>?
-    instruments: Array<String>
-    @index publish: Boolean
-    artistConcerts: Set<ConcertArtist>?
-  }
-
-  @access(query=true, mutation=AuthContext.role == "admin")
-  type ConcertArtist {
-    @pk id: Uuid = generate_uuid()
-    concert: Concert
-    artist: Artist
-    @index isMain: Boolean
-    rank: Int
-    instrument: String
-  }
-
-  @access(AuthContext.role == "admin")
-  type Subscription {
-    @pk id: Uuid = generate_uuid()
-    @unique email: String
-    group: String
-  }
-
-  @access(query=AuthContext.role == "admin" || self.authUser.id == AuthUserContext.authUserId,
-          mutation=AuthContext.role == "admin" || self.authUser.id == AuthUserContext.authUserId,
-          delete=AuthContext.role == "admin")
-  type Membership {
-    @pk id: Uuid = generate_uuid()
-    @unique authUser: AuthUser
-    @index spouseFirstName: String?
-    @index spouseLastName: String?
-    spouseEmail: String?
-
-    @index
-    @access(query=true, mutation=AuthContext.role == "admin")
-    expiry: LocalDate?
-
-    @index
-    @access(query=true, mutation=AuthContext.role == "admin", create=true)
-    type: String
-    payments: Set<Payment>?
-  }
-
-  @access(AuthContext.role == "admin")
-  type Rsvp {
-    @pk id: Uuid = generate_uuid()
-    @unique("concert_email") email: String
-    @unique("concert_email") concert: Concert
-    numTickets: Int
-  }
-
-  @access(AuthContext.role == "admin")
-  type Notification {
-    @pk id: Uuid = generate_uuid()
-    concert: Concert?
-    @index subject: String
-    message: String
-    postMessage: String
-  }
-
-  @access(query=true, mutation=AuthContext.role == "admin")
-  @plural("advisories")
-  type Advisory {
-    @pk id: Uuid = generate_uuid()
-    level: String
-    message: String
-    footer: String?
-  }
-
-  @access(query=self.clerkId == AuthContext.clerkId || AuthContext.role == "admin", mutation=AuthContext.role == "admin")
-  type AuthUser {
-    @pk id: Uuid = generate_uuid()
-    @unique clerkId: String?
-    @unique email: String?
-    @index firstName: String?
-    @index lastName: String?
-    membership: Membership?
-  }
-
-  @access(query=AuthContext.role == "admin", create=AuthContext.role == "admin", delete=false, update=false)
-  type Payment {
-    @pk id: Uuid = generate_uuid()
-    membership: Membership
-    date: LocalDate
-    note: String
-    infoOnly: Boolean = false
-  }
+```
+@access(query=self.publish || AuthContext.role == "admin", mutation=AuthContext.role == "admin")
+type Concert {
+  @pk id: Uuid = generate_uuid()
+  @index title: String
+  description: String
+  memberPrice: Int
+  nonMemberPrice: Int
+  venue: Venue
+  ticketLink: String?
+  photoUrl: String
+  @index startTime: LocalDateTime
+  @index endTime: LocalDateTime
+  publish: Boolean
+  rsvps: Set<Rsvp>?
+  notifications: Set<Notification>?
+  concertArtists: Set<ConcertArtist>
 }
 ```
